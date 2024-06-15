@@ -1,43 +1,23 @@
 import cv2
 import numpy as np
 
-image_path = 'image.jpg'
+image_path = 'image.jpg' 
 image = cv2.imread(image_path)
 
 if image is None:
     raise FileNotFoundError(f"Resim yüklenemedi: {image_path}")
 
-hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) #resmi hsvye çevirdim
 
-lower_red = np.array([0, 50, 50])
-upper_red = np.array([10, 255, 255])
-mask1 = cv2.inRange(hsv, lower_red, upper_red)
+lower_red = np.array([97, 70, 0]) # gülün en düşük renk değeri
+upper_red = np.array([255, 255, 255])
 
-lower_red = np.array([170, 50, 50])
-upper_red = np.array([180, 255, 255])
-mask2 = cv2.inRange(hsv, lower_red, upper_red)
+roseMask = cv2.inRange(hsv, lower_red, upper_red)
+BGmask = cv2.bitwise_not(roseMask)
+hsv[BGmask > 0, 1] = 0 # bg siyah beyaz olacağından saturationu 0 a çektim
+hsv[roseMask > 0, 0] = 135 # mor rengin hue uzayında bu değerde olduğunu buldum
 
-mask = mask1 | mask2
-
-masked_image = cv2.bitwise_and(image, image, mask=mask)
-
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-background_gray = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-
-background_gray[mask != 0] = 0
-
-mor = np.zeros_like(image)
-mor[:] = [122, 0, 122]
-
-mor_gul = cv2.bitwise_and(mor, mor, mask=mask)
-
-result = background_gray + mor_gul
+purple_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) # resmi hsv den rgb ye çevirdim
 
 output_path = 'sonuc.jpg'
-cv2.imwrite(output_path, result)
-
-cv2.imshow('Sonuc', result)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-output_path
+cv2.imwrite(output_path, purple_image) #sonuc.jpg olarak kaydettim.
